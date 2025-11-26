@@ -40,10 +40,16 @@ export const fromDeviceStream: () => TransformStream<Uint8Array, DeviceOutput> =
                 malformedDetectorIndex !== -1 &&
                 packet[malformedDetectorIndex + 1] === 0xc3
               ) {
+                let hex = '';
+                try {
+                  hex = Array.from(byteBuffer.subarray(0, malformedDetectorIndex - 1))
+                      .map(byte => byte.toString(16).padStart(2, '0'))
+                      .join('')
+                } catch (e) {
+                  hex = byteBuffer.subarray(0, malformedDetectorIndex - 1).toString();
+                }
                 console.warn(
-                  `⚠️ Malformed packet found, discarding: ${byteBuffer
-                    .subarray(0, malformedDetectorIndex - 1)
-                    .toString()}`,
+                    `⚠️ Malformed packet found, discarding:`, hex
                 );
 
                 byteBuffer = byteBuffer.subarray(malformedDetectorIndex);

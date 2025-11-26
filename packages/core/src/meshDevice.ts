@@ -933,9 +933,45 @@ export class MeshDevice {
       channel: meshPacket.channel,
     };
 
+    let bin;
+    switch (dataPacket.portnum) {
+      case Protobuf.Portnums.PortNum.POSITION_APP: {
+        bin = fromBinary(Protobuf.Mesh.PositionSchema, dataPacket.payload)
+        break;
+      }
+      case Protobuf.Portnums.PortNum.NODEINFO_APP: {
+        bin = fromBinary(Protobuf.Mesh.UserSchema, dataPacket.payload)
+        break;
+      }
+      case Protobuf.Portnums.PortNum.TELEMETRY_APP: {
+        bin = fromBinary(Protobuf.Telemetry.TelemetrySchema, dataPacket.payload)
+        break;
+      }
+      case Protobuf.Portnums.PortNum.TRACEROUTE_APP: {
+        bin = fromBinary(Protobuf.Mesh.RouteDiscoverySchema, dataPacket.payload)
+        break;
+      }
+      case Protobuf.Portnums.PortNum.ROUTING_APP: {
+        bin = fromBinary(Protobuf.Mesh.RoutingSchema, dataPacket.payload)
+        break;
+      }
+
+    }
+    let binstr;
+    if (bin) {
+      // @ts-ignore
+      delete bin["$typeName"]
+      binstr = JSON.stringify(bin)
+    } else {
+      binstr = Array.from(dataPacket.payload)
+          .map(byte => byte.toString(16).padStart(2, '0'))
+          .join('')
+    }
     this.log.trace(
       Emitter[Emitter.HandleMeshPacket],
       `📦 Received ${Protobuf.Portnums.PortNum[dataPacket.portnum]} packet`,
+      `from ${packetMetadata.from} with payload: `, binstr
+        // `from ${dataPacket.source} to ${dataPacket.dest} with payload: `,JSON.stringify(fromBinary(initialMap.get(dataPacket.portnum.toString()), dataPacket.payload)),
     );
 
     switch (dataPacket.portnum) {
